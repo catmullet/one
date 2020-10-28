@@ -32,11 +32,12 @@ func NewLocalOneStore(ctx context.Context, ttl time.Duration) *LocalOneStore {
 }
 
 func (lis *LocalOneStore) AddKey(key string) error {
-	if lis.HasKey(key) != nil {
+	if lis.HasKey(key) == one.ErrNoKeyExist {
 		lis.mu.Lock()
 		defer lis.mu.Unlock()
 		lis.store[key] = struct{}{}
 		lis.addTtlKey(key)
+		return nil
 	}
 	return one.ErrKeyExist
 }
