@@ -64,8 +64,8 @@ oneStore = redisstore.NewRedisOneStore(options, time.Second * 30)
 ```
 ## Add Keys
 ```go
-err := oneStore.Add(key)
-if err == one.ErrKeyExist {
+ok, err := oneStore.Add(key)
+if !ok {
   // Key already exists, so handle that here.
 }
 
@@ -73,8 +73,8 @@ if err == one.ErrKeyExist {
 ```
 ## Checking Keys
 ```go
-err := oneStore.HasKey(key)
-if err == one.ErrNoKeyExist {
+exists, err := oneStore.HasKey(key)
+if !exists {
   // Key does not exist in the one store
 }
 
