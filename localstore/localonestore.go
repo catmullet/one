@@ -34,23 +34,24 @@ func NewLocalOneStore(ctx context.Context, ttl time.Duration) *LocalOneStore {
 }
 
 // AddKey checks existence of key, returns error if one exists or adds one.
-func (lis *LocalOneStore) AddKey(key string) error {
-	if lis.HasKey(key) == one.ErrNoKeyExist {
+func (lis *LocalOneStore) AddKey(key string) (ok bool, err error) {
+	isExisting, err := lis.HasKey(key)
+	if !isExisting {
 		lis.mu.Lock()
 		defer lis.mu.Unlock()
 		lis.store[key] = struct{}{}
 		lis.addTtlKey(key)
-		return nil
+		return true, nil
 	}
-	return one.ErrKeyExist
+	return false, one.ErrKeyExist
 }
 
 // HasKey returns "Error: No Key Exists" if no key is found else returns nil
-func (lis *LocalOneStore) HasKey(key string) error {
+func (lis *LocalOneStore) HasKey(key string) (exists bool, err error) {
 	if _, ok := lis.store[key]; !ok {
-		return one.ErrNoKeyExist
+		return false, one.ErrNoKeyExist
 	}
-	return nil
+	return true, nil
 }
 
 func getTtlKey(ttl time.Duration) string {
