@@ -20,6 +20,7 @@ func NewRedisOneStore(options *redis.Options, ttl time.Duration) *RedisOneStore 
 	}
 }
 
+// AddKey adds key to redis if one does not exist otherwise returns error
 func (rds *RedisOneStore) AddKey(key string) error {
 	err := rds.HasKey(key)
 	if err == one.ErrKeyExist {
@@ -30,6 +31,7 @@ func (rds *RedisOneStore) AddKey(key string) error {
 	return err
 }
 
+// HasKey returns error if key does not exist
 func (rds *RedisOneStore) HasKey(key string) (err error) {
 	_, err = rds.client.Get(key).Result()
 	if err != nil {
