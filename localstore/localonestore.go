@@ -11,6 +11,7 @@ const (
 	ttlKeyTimeFormat = "02150405"
 )
 
+// LocalOneStore struct for holding in memory store and ttl
 type LocalOneStore struct {
 	ctx      context.Context
 	ttl      time.Duration
@@ -19,6 +20,7 @@ type LocalOneStore struct {
 	mu       *sync.RWMutex
 }
 
+// NewLocalOneStore returns new LocalOneStore for in memory storage of keys
 func NewLocalOneStore(ctx context.Context, ttl time.Duration) *LocalOneStore {
 	store := &LocalOneStore{
 		ctx:      ctx,
@@ -31,6 +33,7 @@ func NewLocalOneStore(ctx context.Context, ttl time.Duration) *LocalOneStore {
 	return store
 }
 
+// AddKey checks existence of key, returns error if one exists or adds one.
 func (lis *LocalOneStore) AddKey(key string) error {
 	if lis.HasKey(key) == one.ErrNoKeyExist {
 		lis.mu.Lock()
@@ -42,6 +45,7 @@ func (lis *LocalOneStore) AddKey(key string) error {
 	return one.ErrKeyExist
 }
 
+// HasKey returns "Error: No Key Exists" if no key is found else returns nil
 func (lis *LocalOneStore) HasKey(key string) error {
 	if _, ok := lis.store[key]; !ok {
 		return one.ErrNoKeyExist

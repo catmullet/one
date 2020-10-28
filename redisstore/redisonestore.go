@@ -2,20 +2,17 @@ package redisstore
 
 import (
 	"github.com/catmullet/one"
-	redis "gopkg.in/redis.v5"
+	"gopkg.in/redis.v5"
 	"time"
 )
 
+// RedisOneStore struct to hold redis client and ttl
 type RedisOneStore struct {
 	client *redis.Client
 	ttl    time.Duration
 }
 
-type RedisField struct {
-	key   string
-	value string
-}
-
+// NewRedisOneStore returns a new RedisOneStore with redis client using gopkg.in/redis.v5
 func NewRedisOneStore(options *redis.Options, ttl time.Duration) *RedisOneStore {
 	return &RedisOneStore{
 		client: redis.NewClient(options),
