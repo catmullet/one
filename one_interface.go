@@ -12,6 +12,6 @@ var (
 
 // OneStore interface for existing and custom key storage
 type OneStore interface {
-	AddKey(key string) error
-	HasKey(key string) error
+	AddKey(key string) (ok bool, err error)
+	HasKey(key string) (exists bool, err error)
 }
