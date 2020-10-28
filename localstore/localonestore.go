@@ -2,7 +2,7 @@ package localstore
 
 import (
 	"context"
-	"fmt"
+	"github.com/catmullet/one"
 	"sync"
 	"time"
 )
@@ -11,7 +11,7 @@ const (
 	ttlKeyTimeFormat = "02150405"
 )
 
-type LocalIdempotencyStore struct {
+type LocalOneStore struct {
 	ctx      context.Context
 	ttl      time.Duration
 	store    map[string]struct{}
@@ -19,8 +19,8 @@ type LocalIdempotencyStore struct {
 	mu       *sync.RWMutex
 }
 
-func NewLocalIdempotencyStore(ctx context.Context, ttl time.Duration) *LocalIdempotencyStore {
-	store := &LocalIdempotencyStore{
+func NewLocalOneStore(ctx context.Context, ttl time.Duration) *LocalOneStore {
+	store := &LocalOneStore{
 		ctx:      ctx,
 		ttl:      ttl,
 		store:    make(map[string]struct{}),
@@ -31,19 +31,19 @@ func NewLocalIdempotencyStore(ctx context.Context, ttl time.Duration) *LocalIdem
 	return store
 }
 
-func (lis *LocalIdempotencyStore) AddKey(key string) error {
+func (lis *LocalOneStore) AddKey(key string) error {
 	if lis.HasKey(key) != nil {
 		lis.mu.Lock()
 		defer lis.mu.Unlock()
 		lis.store[key] = struct{}{}
 		lis.addTtlKey(key)
 	}
-	return fmt.Errorf("key already exists")
+	return one.ErrKeyExist
 }
 
-func (lis *LocalIdempotencyStore) HasKey(key string) error {
+func (lis *LocalOneStore) HasKey(key string) error {
 	if _, ok := lis.store[key]; !ok {
-		return fmt.Errorf("no key found")
+		return one.ErrNoKeyExist
 	}
 	return nil
 }
@@ -57,7 +57,7 @@ func getTimeFromKey(t string) (time.Time, error) {
 	return time.Parse(ttlKeyTimeFormat, t)
 }
 
-func (lis *LocalIdempotencyStore) addTtlKey(key string) {
+func (lis *LocalOneStore) addTtlKey(key string) {
 	ttlKey := getTtlKey(lis.ttl)
 	if _, ok := lis.ttlStore[ttlKey]; ok {
 		lis.ttlStore[ttlKey] = append(lis.ttlStore[ttlKey], key)
@@ -66,7 +66,7 @@ func (lis *LocalIdempotencyStore) addTtlKey(key string) {
 	}
 }
 
-func (lis *LocalIdempotencyStore) cleanup() {
+func (lis *LocalOneStore) cleanup() {
 	timer := time.NewTicker(lis.ttl)
 
 	for {
@@ -80,7 +80,7 @@ func (lis *LocalIdempotencyStore) cleanup() {
 	}
 }
 
-func (lis *LocalIdempotencyStore) findAndRemoveExpired(tc time.Time) {
+func (lis *LocalOneStore) findAndRemoveExpired(tc time.Time) {
 	lis.mu.Lock()
 	defer lis.mu.Unlock()
 	ct := tc.Format(ttlKeyTimeFormat)

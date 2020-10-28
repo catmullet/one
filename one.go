@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func CreateIdempotencyKey(fields ...interface{}) (key string) {
+func MakeKey(fields ...interface{}) (key string) {
 	var sha = sha256.New()
 	sha.Write([]byte(fmt.Sprintf("%v", fields...)))
 	key = fmt.Sprintf("%x", sha.Sum(nil))
