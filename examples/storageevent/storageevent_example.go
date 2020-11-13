@@ -1,9 +1,9 @@
 package main
 
 import (
-	"context"
 	"github.com/catmullet/one"
-	"github.com/catmullet/one/localstore"
+	"github.com/catmullet/one/redisstore"
+	"gopkg.in/redis.v5"
 	"log"
 	"time"
 )
@@ -16,8 +16,6 @@ type Event struct {
 }
 
 func main() {
-	ctx := context.Background()
-
 	evt := Event{
 		Bucket:     "gcs://test-bucket",
 		Object:     "test_data.txt",
@@ -25,8 +23,11 @@ func main() {
 		UpdateTime: time.Now(),
 	}
 
-	var localStore one.OneStore
-	localStore = localstore.NewLocalOneStore(ctx, time.Second*15)
+	var redisStore one.Store
+	redisStore = redisstore.NewRedisStore(&redis.Options{
+		Network: "tcp",
+		Addr:    "localhost:6379",
+	}, time.Second*15)
 
 	log.Println("PubSub messages coming in for storage events...")
 
@@ -34,12 +35,16 @@ func main() {
 		evt.Version = i
 		oneKey := one.MakeKey(evt.Bucket, evt.Object, evt.Version)
 
-		err := localStore.AddKey(oneKey)
-		if err == one.ErrKeyExist {
-			log.Println("key already exists")
-		} else {
-			log.Println("key was added")
+		ok, err := redisStore.AddKey(oneKey)
+		if err != nil {
+			log.Println("error", err)
+			continue
 		}
+		if !ok {
+			log.Println("key already exists")
+			continue
+		}
+		log.Println("key was added")
 	}
 
 	log.Println("Duplicate PubSub messages coming in for storage events...")
@@ -48,12 +53,16 @@ func main() {
 		evt.Version = i
 		oneKey := one.MakeKey(evt.Bucket, evt.Object, evt.Version)
 
-		err := localStore.AddKey(oneKey)
-		if err == one.ErrKeyExist {
-			log.Println("key already exists")
-		} else {
-			log.Println("key was added")
+		ok, err := redisStore.AddKey(oneKey)
+		if err != nil {
+			log.Println("error", err)
+			continue
 		}
+		if !ok {
+			log.Println("key already exists")
+			continue
+		}
+		log.Println("key was added")
 	}
 
 	log.Println("finished")

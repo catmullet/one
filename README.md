@@ -39,14 +39,7 @@ If you wanted to process based on any change to the storage object you could pas
 ```go
 key := one.MakeKey(event)
 ```
-## Implementing the OneStore
-Once you have created your key you're going to need a place to store it. This is so you can check against it later on.
-Currently there are only two implementations of storage.  
-#### Local Storage _(Only for single instance Apps)_
-```go
-var oneStore OneStore
-oneStore = localstore.NewLocalOneStore(ctx, time.Minute * 5)
-```
+
 #### Redis
 ```go
 // import "gopkg.in/redis.v5" for redis.Options
@@ -71,11 +64,3 @@ if !ok {
 
 // Key doesn't exist and was added to the one store
 ```
-## Checking Keys
-```go
-exists, err := oneStore.HasKey(key)
-if !exists {
-  // Key does not exist in the one store
-}
-
-// Key exists
